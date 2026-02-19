@@ -345,10 +345,10 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
   // =========================
-  // Local-only (No DB, No Server)
+  // Method A (No DB): videos.json + public video URLs
+  // - 누구나 시청 가능
+  // - 추가는 GitHub에서 videos.json 수정(권한 있는 사람만)
   // =========================
-
-  const LS_KEY = "awana_local_videos_v1";
 
   const $ = (s) => document.querySelector(s);
   const screens = { list: $("#screen-list"), player: $("#screen-player"), admin: $("#screen-admin") };
@@ -368,28 +368,11 @@
   const btnGoAdmin = $("#btnGoAdmin");
 
   const adminTbody = $("#adminTbody");
-  const adminForm = $("#adminForm");
-  const btnResetForm = $("#btnResetForm");
-  const btnDelete = $("#btnDelete");
-  const btnAdminAdd = $("#btnAdminAdd");
-  const btnSave = $("#btnSave");
-
-  const fId = $("#fId");
-  const fFilePath = $("#fFilePath"); // fileKey 저장용
-  const fName = $("#fName");
-  const fMemo = $("#fMemo");
-  const fDifficulty = $("#fDifficulty");
-  const fFile = $("#fFile");
-  const fileHint = $("#fileHint");
 
   const toastEl = $("#toast");
-  const btnRelink = $("#btnRelink");
 
-  // 브라우저 메모리에만 유지되는 파일 맵: fileKey -> File
-  const fileMap = new Map();
-
-  // 저장 중 중복 submit 방지
-  let saving = false;
+  let VIDEOS = [];
+  let loaded = false;
 
   function toast(msg){
     toastEl.textContent = msg;
@@ -406,6 +389,7 @@
 
   function starsHTML(n) {
     const max = 5;
+    n = Math.min(5, Math.max(1, Number(n) || 1));
     let html = "";
     for (let i = 1; i <= max; i++) html += `<span class="star ${i <= n ? "" : "off"}">★</span>`;
     return html;
@@ -416,293 +400,111 @@
     screens[name].classList.add("active");
   }
 
-  function uid(){
-    return (crypto?.randomUUID?.() || ("id_" + Date.now() + "_" + Math.random().toString(16).slice(2)));
-  }
+  async function loadVideosOnce(){
+    if (loaded) return;
+    loaded = true;
 
-  function makeFileKey(file){
-    // 브라우저 재연결용 키
-    return `${file.name}::${file.size}`;
-  }
-
-  // -------------------------
-  // Storage (localStorage)
-  // -------------------------
-  let VIDEOS = [];
-
-  function loadVideos(){
-    try {
-      const raw = localStorage.getItem(LS_KEY);
-      VIDEOS = raw ? JSON.parse(raw) : [];
-    } catch {
+    try{
+      // 캐시 문제 방지 (깃허브 페이지에서 갱신이 바로 안 보일 수 있어서)
+      const res = await fetch("./videos.json?ts=" + Date.now(), { cache: "no-store" });
+      if (!res.ok) throw new Error("videos.json 로드 실패: " + res.status);
+      const data = await res.json();
+      VIDEOS = Array.isArray(data) ? data : [];
+    }catch(e){
       VIDEOS = [];
+      toast("videos.json을 불러오지 못했어요");
+      console.error(e);
     }
   }
 
-  function saveVideos(){
-    localStorage.setItem(LS_KEY, JSON.stringify(VIDEOS));
-  }
+  function renderList() {
+    listCount.textContent = String(VIDEOS.length);
 
-  // -------------------------
-  // Render
-  // -------------------------
-function renderList() {
-  listCount.textContent = String(VIDEOS.length);
+    grid.innerHTML = VIDEOS.map(v => {
+      const memoText = (v.memo || "").trim();
 
-  grid.innerHTML = VIDEOS.map(v => {
-    const memoText = (v.memo || "").trim();
-
-    return `
-      <div class="col-12 col-md-6 col-lg-4">
-        <div class="card game-card h-100" role="button" tabindex="0" data-id="${escapeHTML(v.id)}">
-          <div class="card-body">
-            <div class="d-flex justify-content-between gap-2">
-              <div class="me-auto">
-                <!-- ✅ 이름은 항상 표시 -->
-                <div class="fw-bold text-dark">${escapeHTML(v.name || "")}</div>
-
-                <!-- ✅ 메모는 있을 때만 표시(없으면 아무것도 안 보임) -->
-                ${memoText ? `<div class="muted small mt-2">${escapeHTML(memoText)}</div>` : ``}
+      return `
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="card game-card h-100" role="button" tabindex="0" data-id="${escapeHTML(v.id)}">
+            <div class="card-body">
+              <div class="d-flex justify-content-between gap-2">
+                <div class="me-auto">
+                  <div class="fw-bold text-dark">${escapeHTML(v.name || "")}</div>
+                  ${memoText ? `<div class="muted small mt-2">${escapeHTML(memoText)}</div>` : ``}
+                </div>
+                <div class="stars">${starsHTML(v.difficulty)}</div>
               </div>
-
-              <div class="stars">${starsHTML(Number(v.difficulty) || 1)}</div>
             </div>
           </div>
         </div>
-      </div>
-    `;
-  }).join("");
+      `;
+    }).join("");
 
-  grid.querySelectorAll("[data-id]").forEach(card => {
-    const id = card.getAttribute("data-id");
-    const open = () => { window.location.hash = `#play=${encodeURIComponent(id)}`; };
-    card.addEventListener("click", open);
-    card.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
+    grid.querySelectorAll("[data-id]").forEach(card => {
+      const id = card.getAttribute("data-id");
+      const open = () => { window.location.hash = `#play=${encodeURIComponent(id)}`; };
+      card.addEventListener("click", open);
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
+      });
     });
-  });
-}
+  }
 
-
-  function renderAdmin() {
+  function renderAdminReadOnly(){
+    // 관리자 화면은 "보기 전용"으로만 제공 (추가/업로드 없음)
     adminCount.textContent = String(VIDEOS.length);
 
     adminTbody.innerHTML = VIDEOS.map(v => {
-      const linked = v.fileKey && fileMap.has(v.fileKey);
+      const ok = !!(v.url && typeof v.url === "string");
       return `
-        <tr data-id="${escapeHTML(v.id)}" role="button" tabindex="0" title="클릭해서 편집">
-          <td class="fw-semibold text-dark">${escapeHTML(v.name)}</td>
-          <td class="stars">${starsHTML(Number(v.difficulty) || 1)}</td>
-          <td class="small ${linked ? "text-success" : "muted"}">
-            ${linked ? "연결됨" : "미연결"}
+        <tr>
+          <td class="fw-semibold text-dark">
+            <div>${escapeHTML(v.name || "")}</div>
+            ${(v.memo || "").trim() ? `<div class="muted small">${escapeHTML(v.memo)}</div>` : ``}
+          </td>
+          <td class="stars">${starsHTML(v.difficulty)}</td>
+          <td class="small ${ok ? "text-success" : "text-danger"}">
+            ${ok ? "URL" : "누락"}
           </td>
         </tr>
       `;
     }).join("");
 
-    adminTbody.querySelectorAll("tr[data-id]").forEach(row => {
-      const id = row.getAttribute("data-id");
-      const openEdit = () => {
-        const item = VIDEOS.find(x => x.id === id);
-        if (!item) return;
-        fillAdminForm(item);
-      };
-      row.addEventListener("click", openEdit);
-      row.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openEdit(); }
-      });
-    });
-  }
-
-  // -------------------------
-  // Admin form
-  // -------------------------
-  function resetAdminForm() {
-    fId.value = "";
-    fFilePath.value = "";
-    fName.value = "";
-    fMemo.value = "";
-    fDifficulty.value = "3";
-    fFile.value = "";
-    btnDelete.disabled = true;
-    fileHint.textContent = "새 항목은 영상 파일 선택 후 저장";
-  }
-
-  function fillAdminForm(item) {
-    fId.value = item.id;
-    fFilePath.value = item.fileKey || "";
-    fName.value = item.name || "";
-    fMemo.value = item.memo || "";
-    fDifficulty.value = String(item.difficulty || 3);
-    fFile.value = "";
-    btnDelete.disabled = false;
-
-    const linked = item.fileKey && fileMap.has(item.fileKey);
-    fileHint.textContent = linked
-      ? "현재 브라우저에서 파일 연결됨 (바꾸려면 새 파일 선택)"
-      : "파일 미연결: [영상 다시 연결]로 파일들을 다시 선택하세요";
-  }
-
-  // 저장(등록)
-  adminForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    if (saving) return;
-    saving = true;
-    btnSave.disabled = true;
-
-    try {
-      const name = fName.value.trim();
-      const memo = fMemo.value.trim();
-      const difficulty = Math.min(5, Math.max(1, Number(fDifficulty.value) || 1));
-
-      const id = fId.value.trim();
-      const existingFileKey = fFilePath.value.trim();
-      const file = fFile.files && fFile.files[0];
-
-      if (!name) { toast("이름을 입력하세요"); return; }
-
-      // 새 항목 생성: 파일 필수 (정책 그대로)
-      if (!id && !file) {
-        toast("새 항목은 영상 파일을 선택해야 해요");
-        return;
-      }
-
-      // fileKey 결정
-      let fileKey = existingFileKey;
-      if (file) {
-        fileKey = makeFileKey(file);
-        fileMap.set(fileKey, file);
-      }
-
-      // ✅ 동일 파일(fileKey) 중복 등록 방지: 새로 추가 시 이미 있으면 업데이트로 처리
-      if (!id && fileKey) {
-        const dup = VIDEOS.find(v => v.fileKey === fileKey);
-        if (dup) {
-          dup.name = name;
-          dup.memo = memo;
-          dup.difficulty = difficulty;
-          saveVideos();
-          toast("이미 등록된 파일이라 항목을 업데이트했어요");
-          resetAdminForm();
-          route();
-          return;
-        }
-      }
-
-      if (!id) {
-        // ✅ 딱 1번만 추가 (중복 추가 제거 완료)
-        VIDEOS.unshift({ id: uid(), name, memo, difficulty, fileKey });
-      } else {
-        const idx = VIDEOS.findIndex(v => v.id === id);
-        if (idx >= 0) {
-          VIDEOS[idx] = { ...VIDEOS[idx], name, memo, difficulty, fileKey };
-        }
-      }
-
-      saveVideos();
-      toast("저장됨");
-      resetAdminForm();
-      route();
-    } finally {
-      saving = false;
-      btnSave.disabled = false;
-    }
-  });
-
-  // 삭제
-  btnDelete.addEventListener("click", () => {
-    const id = fId.value.trim();
-    if (!id) return;
-
-    const item = VIDEOS.find(v => v.id === id);
-    if (!item) return;
-
-    if (!confirm(`삭제할까요?\n\n${item.name}`)) return;
-
-    VIDEOS = VIDEOS.filter(v => v.id !== id);
-    saveVideos();
-    toast("삭제됨");
-    resetAdminForm();
-    route();
-  });
-
-  // 초기화/추가
-  btnResetForm?.addEventListener("click", resetAdminForm);
-  btnAdminAdd?.addEventListener("click", () => { resetAdminForm(); fName.focus(); });
-
-  // -------------------------
-  // Relink: 파일을 한 번에 다시 선택해서 매칭
-  // -------------------------
-  function relinkFilesViaPicker(){
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "video/*";
-    input.multiple = true;
-
-    input.addEventListener("change", () => {
-      const files = Array.from(input.files || []);
-      for (const f of files) {
-        const k = makeFileKey(f);
-        fileMap.set(k, f);
-      }
-
-      let linked = 0;
-      for (const v of VIDEOS) {
-        if (v.fileKey && fileMap.has(v.fileKey)) linked++;
-      }
-
-      toast(`파일 ${files.length}개 선택 / 연결된 항목 ${linked}개`);
-      renderAdmin();
-      renderList();
-    });
-
-    input.click();
-  }
-
-  btnRelink?.addEventListener("click", relinkFilesViaPicker);
-
-  // -------------------------
-  // Player
-  // -------------------------
-  let currentPlayId = null;
-  let currentObjectUrl = null;
-
-  function cleanupObjectUrl(){
-    if (currentObjectUrl) {
-      URL.revokeObjectURL(currentObjectUrl);
-      currentObjectUrl = null;
-    }
+    // 기존 폼/버튼은 숨김 처리
+    $("#authBox")?.classList.add("d-none");
+    $("#adminLocked")?.classList.remove("d-none");
+    $("#adminLocked").textContent = "추가는 사이트에서 할 수 없어요. GitHub에서 videos.json을 수정해서 반영하세요.";
+    $("#adminForm")?.classList.add("d-none");
+    $("#btnResetForm")?.classList.add("d-none");
+    $("#btnAdminAdd")?.classList.add("d-none");
+    $("#btnRelink")?.classList.add("d-none");
+    $("#btnSignOut")?.classList.add("d-none");
   }
 
   function showPlayer(id) {
-    const v = VIDEOS.find(x => x.id === id);
+    const v = VIDEOS.find(x => String(x.id) === String(id));
     if (!v) { window.location.hash = "#list"; return; }
 
-    currentPlayId = id;
     playerName.textContent = v.name || "-";
-    playerStars.innerHTML = starsHTML(Number(v.difficulty) || 1);
+    playerStars.innerHTML = starsHTML(v.difficulty);
 
-    const f = v.fileKey ? fileMap.get(v.fileKey) : null;
-    if (!f) {
-      toast("이 브라우저에서 파일이 아직 연결되지 않았어요");
-      window.location.hash = "#admin";
-      setTimeout(()=>toast("관리자에서 [영상 다시 연결]을 눌러 파일들을 선택하세요"), 250);
+    if (!v.url) {
+      toast("이 항목은 영상 URL이 없어요");
+      window.location.hash = "#list";
       return;
     }
 
-    cleanupObjectUrl();
-    currentObjectUrl = URL.createObjectURL(f);
-    videoEl.src = currentObjectUrl;
+    videoEl.src = v.url;
     videoEl.load();
     setScreen("player");
   }
 
-  // -------------------------
   // Controls / Nav
-  // -------------------------
   btnBack.addEventListener("click", () => { window.location.hash = "#list"; });
   btnPlayPause.addEventListener("click", () => { if (videoEl.paused) videoEl.play(); else videoEl.pause(); });
   btnGoList.addEventListener("click", () => { window.location.hash = "#list"; });
+
+  // ✅ 관리자 버튼은 유지하되, "보기 전용 안내" 화면으로 사용
   btnGoAdmin.addEventListener("click", () => { window.location.hash = "#admin"; });
 
   window.addEventListener("contextmenu", (e) => e.preventDefault(), { capture: true });
@@ -720,15 +522,12 @@ function renderList() {
     }
   });
 
-  // -------------------------
-  // Router
-  // -------------------------
-  function route() {
+  async function route() {
+    await loadVideosOnce();
+    renderList();
+
     const hash = window.location.hash || "#list";
     const mPlay = hash.match(/^#play=(.+)$/);
-
-    loadVideos();
-    renderList();
 
     if (mPlay) {
       showPlayer(decodeURIComponent(mPlay[1]));
@@ -737,31 +536,20 @@ function renderList() {
 
     if (hash === "#admin") {
       setScreen("admin");
-
-      // 로그인 UI 사용 안 함: 폼 보여주기
-      $("#authBox")?.classList.add("d-none");
-      $("#adminLocked")?.classList.add("d-none");
-      adminForm.classList.remove("d-none");
-
-      btnResetForm?.classList.remove("d-none");
-      btnAdminAdd?.classList.remove("d-none");
-
-      renderAdmin();
+      renderAdminReadOnly();
       return;
     }
 
     try { videoEl.pause(); } catch {}
-    cleanupObjectUrl();
-    currentPlayId = null;
     setScreen("list");
   }
 
   window.addEventListener("hashchange", route);
 
   // init
-  resetAdminForm();
   route();
 </script>
+
 
 
 
