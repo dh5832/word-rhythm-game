@@ -446,37 +446,43 @@
   // -------------------------
   // Render
   // -------------------------
-  function renderList() {
-    listCount.textContent = String(VIDEOS.length);
+function renderList() {
+  listCount.textContent = String(VIDEOS.length);
 
-    grid.innerHTML = VIDEOS.map(v => {
-      const memoText = (v.memo || "").trim();  // ✅ 메모 없으면 공백 처리
-      return `
-        <div class="col-12 col-md-6 col-lg-4">
-          <div class="card game-card h-100" role="button" tabindex="0" data-id="${escapeHTML(v.id)}">
-            <div class="card-body">
-              <div class="d-flex justify-content-between gap-2">
-                <div class="me-auto">
-                  <!-- ✅ 목록에는 메모만 표시 (메모 없으면 아무것도 안 보이게) -->
-                  <div class="fw-bold text-dark">${memoText ? escapeHTML(memoText) : "&nbsp;"}</div>
-                </div>
-                <div class="stars">${starsHTML(Number(v.difficulty) || 1)}</div>
+  grid.innerHTML = VIDEOS.map(v => {
+    const memoText = (v.memo || "").trim();
+
+    return `
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card game-card h-100" role="button" tabindex="0" data-id="${escapeHTML(v.id)}">
+          <div class="card-body">
+            <div class="d-flex justify-content-between gap-2">
+              <div class="me-auto">
+                <!-- ✅ 이름은 항상 표시 -->
+                <div class="fw-bold text-dark">${escapeHTML(v.name || "")}</div>
+
+                <!-- ✅ 메모는 있을 때만 표시(없으면 아무것도 안 보임) -->
+                ${memoText ? `<div class="muted small mt-2">${escapeHTML(memoText)}</div>` : ``}
               </div>
+
+              <div class="stars">${starsHTML(Number(v.difficulty) || 1)}</div>
             </div>
           </div>
         </div>
-      `;
-    }).join("");
+      </div>
+    `;
+  }).join("");
 
-    grid.querySelectorAll("[data-id]").forEach(card => {
-      const id = card.getAttribute("data-id");
-      const open = () => { window.location.hash = `#play=${encodeURIComponent(id)}`; };
-      card.addEventListener("click", open);
-      card.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
-      });
+  grid.querySelectorAll("[data-id]").forEach(card => {
+    const id = card.getAttribute("data-id");
+    const open = () => { window.location.hash = `#play=${encodeURIComponent(id)}`; };
+    card.addEventListener("click", open);
+    card.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
     });
-  }
+  });
+}
+
 
   function renderAdmin() {
     adminCount.textContent = String(VIDEOS.length);
