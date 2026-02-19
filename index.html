@@ -4,117 +4,37 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Word Rhythm Video</title>
+
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/minty/bootstrap.min.css">
   <style>
-    :root{
-      --glow: 0 10px 30px rgba(16,24,40,.12);
-      --stroke: rgba(15,23,42,.10);
-      --grad1: rgba(99,102,241,.14);
-      --grad2: rgba(34,211,238,.14);
-      --ink: #0f172a;
-    }
-    body{
-      background:
-        radial-gradient(900px 480px at 15% 0%, var(--grad1), transparent 55%),
-        radial-gradient(900px 480px at 85% 5%, var(--grad2), transparent 55%),
-        #f7fafc;
-      min-height: 100vh;
-      color: var(--ink);
-    }
-    .navbar{
-      background: rgba(255,255,255,.78) !important;
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--stroke);
-      box-shadow: var(--glow);
-    }
-    .brand-dot{
-      width:10px;height:10px;border-radius:999px;
-      background: linear-gradient(135deg,#6366f1,#22d3ee);
-      display:inline-block; margin-right:.6rem;
-      box-shadow: 0 0 0 6px rgba(99,102,241,.08);
-    }
-    .screen{ display:none; }
-    .screen.active{ display:block; }
-    .game-card{
-      border: 1px solid var(--stroke);
-      background: rgba(255,255,255,.92);
-      box-shadow: var(--glow);
-      transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
-      will-change: transform;
-      animation: popIn .18s ease-out both;
-    }
-    .game-card:hover{
-      transform: translateY(-2px);
-      border-color: rgba(99,102,241,.22);
-      box-shadow: 0 16px 40px rgba(16,24,40,.14);
-    }
-    @keyframes popIn{ from{ transform: translateY(6px); opacity: 0; } to{ transform: translateY(0); opacity: 1; } }
-    .btn-neo{
-      border: 1px solid rgba(99,102,241,.22);
-      background: linear-gradient(135deg, rgba(99,102,241,.18), rgba(34,211,238,.16));
-      color: var(--ink) !important;
-      font-weight: 600;
-    }
-    .btn-neo:hover{
-      border-color: rgba(99,102,241,.35);
-      box-shadow: 0 10px 26px rgba(99,102,241,.16);
-      color: var(--ink) !important;
-    }
-    .badge-soft{
-      border: 1px solid rgba(15,23,42,.10);
-      background: rgba(15,23,42,.04);
-      color: var(--ink);
-    }
-    .stars{ white-space:nowrap; }
-    .stars .star{ font-size: 1rem; line-height: 1; color: #f59e0b; }
-    .stars .off{ opacity:.28; }
-    .muted{ color: rgba(15,23,42,.66) !important; }
-    .hr-soft{
-      border: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(15,23,42,.16), transparent);
-      opacity: 1;
-    }
-    video{
-      width:100%;
-      border-radius: 16px;
-      border: 1px solid var(--stroke);
-      background:#000;
-      box-shadow: 0 16px 44px rgba(16,24,40,.12);
-      max-height: 72vh;
-    }
-    .table thead th{
-      background: rgba(15,23,42,.04);
-      border-bottom: 1px solid rgba(15,23,42,.10) !important;
-    }
-    .table-hover tbody tr:hover{
-      background: rgba(99,102,241,.06);
-      cursor: pointer;
-    }
-    .toastish{
-      position: fixed;
-      right: 16px;
-      bottom: 16px;
-      z-index: 1080;
-      min-width: 240px;
-      max-width: 420px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      border: 1px solid rgba(15,23,42,.10);
-      background: rgba(255,255,255,.92);
-      box-shadow: 0 18px 50px rgba(16,24,40,.14);
-      display:none;
-    }
-    .toastish.show{ display:block; animation: toastIn .18s ease-out both; }
-    @keyframes toastIn{ from{ transform: translateY(10px); opacity: 0; } to{ transform: translateY(0); opacity: 1; } }
+    :root{--glow:0 10px 30px rgba(16,24,40,.12);--stroke:rgba(15,23,42,.10);--grad1:rgba(99,102,241,.14);--grad2:rgba(34,211,238,.14);--ink:#0f172a;}
+    body{background:radial-gradient(900px 480px at 15% 0%,var(--grad1),transparent 55%),radial-gradient(900px 480px at 85% 5%,var(--grad2),transparent 55%),#f7fafc;min-height:100vh;color:var(--ink);}
+    .navbar{background:rgba(255,255,255,.78)!important;backdrop-filter:blur(10px);border-bottom:1px solid var(--stroke);box-shadow:var(--glow);}
+    .brand-dot{width:10px;height:10px;border-radius:999px;background:linear-gradient(135deg,#6366f1,#22d3ee);display:inline-block;margin-right:.6rem;box-shadow:0 0 0 6px rgba(99,102,241,.08);}
+    .screen{display:none}.screen.active{display:block}
+    .game-card{border:1px solid var(--stroke);background:rgba(255,255,255,.9);box-shadow:var(--glow);transition:transform .12s ease,box-shadow .12s ease,border-color .12s ease;will-change:transform;animation:popIn .18s ease-out both;}
+    .game-card:hover{transform:translateY(-2px);border-color:rgba(99,102,241,.22);box-shadow:0 16px 40px rgba(16,24,40,.14);}
+    @keyframes popIn{from{transform:translateY(6px);opacity:0}to{transform:translateY(0);opacity:1}}
+    .btn-neo{border:1px solid rgba(99,102,241,.22);background:linear-gradient(135deg,rgba(99,102,241,.18),rgba(34,211,238,.16));color:var(--ink)!important;font-weight:600;}
+    .btn-neo:hover{border-color:rgba(99,102,241,.35);box-shadow:0 10px 26px rgba(99,102,241,.16);color:var(--ink)!important;}
+    .badge-soft{border:1px solid rgba(15,23,42,.10);background:rgba(15,23,42,.04);color:var(--ink);}
+    .stars{white-space:nowrap}.stars .star{font-size:1rem;line-height:1;color:#f59e0b}.stars .off{opacity:.28}
+    .muted{color:rgba(15,23,42,.66)!important}
+    .hr-soft{border:0;height:1px;background:linear-gradient(90deg,transparent,rgba(15,23,42,.16),transparent);opacity:1}
+    video{width:100%;border-radius:16px;border:1px solid var(--stroke);background:#000;box-shadow:0 16px 44px rgba(16,24,40,.12);max-height:72vh}
+    .table thead th{background:rgba(15,23,42,.04);border-bottom:1px solid rgba(15,23,42,.10)!important}
+    .table-hover tbody tr:hover{background:rgba(99,102,241,.06);cursor:pointer}
+    .form-control,.form-select{border-color:rgba(15,23,42,.14)!important;background-color:rgba(255,255,255,.95)!important}
+    .form-control:focus,.form-select:focus{box-shadow:0 0 0 .2rem rgba(99,102,241,.14)!important;border-color:rgba(99,102,241,.40)!important}
+    .toastish{position:fixed;right:16px;bottom:16px;z-index:1080;min-width:240px;max-width:420px;padding:10px 12px;border-radius:14px;border:1px solid rgba(15,23,42,.10);background:rgba(255,255,255,.92);box-shadow:0 18px 50px rgba(16,24,40,.14);display:none}
+    .toastish.show{display:block;animation:toastIn .18s ease-out both}
+    @keyframes toastIn{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
   </style>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg sticky-top">
   <div class="container">
-    <a class="navbar-brand fw-bold text-dark" href="#list">
-      <span class="brand-dot"></span>Word Rhythm Videos
-    </a>
+    <a class="navbar-brand fw-bold text-dark" href="#list"><span class="brand-dot"></span>Word Rhythm Videos</a>
     <div class="ms-auto d-flex gap-2">
       <button id="btnGoList" class="btn btn-sm btn-outline-primary">목록</button>
       <button id="btnGoAdmin" class="btn btn-sm btn-neo">관리자</button>
@@ -125,9 +45,7 @@
 <main class="container py-4">
   <section id="screen-list" class="screen active">
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-      <span class="badge badge-soft rounded-pill px-3 py-2">
-        총 <span id="listCount">0</span>개
-      </span>
+      <span class="badge badge-soft rounded-pill px-3 py-2">총 <span id="listCount">0</span>개</span>
     </div>
     <div id="grid" class="row g-3"></div>
   </section>
@@ -158,12 +76,30 @@
           <div class="card-body">
             <div class="d-flex align-items-center justify-content-between">
               <h5 class="mb-0 fw-bold text-dark">관리자</h5>
-              <button id="btnResetForm" class="btn btn-sm btn-outline-secondary" type="button">새로</button>
+              <div class="d-flex gap-2">
+                <button id="btnSignOut" class="btn btn-sm btn-outline-secondary d-none" type="button">로그아웃</button>
+                <button id="btnResetForm" class="btn btn-sm btn-outline-secondary d-none" type="button">새로</button>
+              </div>
             </div>
 
             <hr class="hr-soft my-3">
 
-            <form id="adminForm">
+            <div id="authBox">
+              <div class="mb-3">
+                <label class="form-label">이메일</label>
+                <input id="authEmail" class="form-control" type="email" autocomplete="email" />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">비밀번호</label>
+                <input id="authPass" class="form-control" type="password" autocomplete="current-password" />
+              </div>
+              <div class="d-flex gap-2">
+                <button id="btnLogin" class="btn btn-neo flex-grow-1" type="button">로그인</button>
+              </div>
+              <div class="muted small mt-2">※ 이 화면은 관리자만 사용</div>
+            </div>
+
+            <form id="adminForm" class="d-none">
               <input type="hidden" id="fId" />
               <input type="hidden" id="fFilePath" />
 
@@ -175,11 +111,7 @@
               <div class="mb-3">
                 <label class="form-label">난이도 (1~5)</label>
                 <select id="fDifficulty" class="form-select" required>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3" selected>3</option>
-                  <option value="4">4</option>
-                  <option value="5">5</option>
+                  <option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option>
                 </select>
               </div>
 
@@ -205,10 +137,8 @@
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
               <h5 class="mb-0 fw-bold text-dark">영상 목록</h5>
               <div class="d-flex align-items-center gap-2">
-                <span class="badge badge-soft rounded-pill px-3 py-2">
-                  총 <span id="adminCount">0</span>개
-                </span>
-                <button id="btnAdminAdd" class="btn btn-sm btn-neo" type="button">+ 추가</button>
+                <span class="badge badge-soft rounded-pill px-3 py-2">총 <span id="adminCount">0</span>개</span>
+                <button id="btnAdminAdd" class="btn btn-sm btn-neo d-none" type="button">+ 추가</button>
               </div>
             </div>
 
@@ -216,13 +146,7 @@
 
             <div class="table-responsive">
               <table class="table table-hover align-middle mb-0">
-                <thead>
-                <tr>
-                  <th style="width: 56%;">이름</th>
-                  <th style="width: 18%;">난이도</th>
-                  <th style="width: 26%;">파일</th>
-                </tr>
-                </thead>
+                <thead><tr><th style="width:56%;">이름</th><th style="width:18%;">난이도</th><th style="width:26%;">파일</th></tr></thead>
                 <tbody id="adminTbody"></tbody>
               </table>
             </div>
@@ -230,6 +154,7 @@
           </div>
         </div>
       </div>
+
     </div>
   </section>
 </main>
@@ -258,238 +183,160 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
 <script>
-  // ✅ Your Supabase
   const SUPABASE_URL = "https://vnpvxeytnugohahzrbfi.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZucHZ4ZXl0bnVnb2hhaHpyYmZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NDc1NjUsImV4cCI6MjA4NzAyMzU2NX0.0smAE33iV10VKU2uGI4BxyfHq2EjtQBATcHJuSgKnMo";
-  const BUCKET = "videos";
-  const TABLE = "videos";
-  const MAX_FILE_MB = 300;
+  const BUCKET="videos", TABLE="videos", MAX_FILE_MB=300;
 
   const { createClient } = supabase;
-  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }});
 
-  const $ = (s) => document.querySelector(s);
-  const screens = { list: $("#screen-list"), player: $("#screen-player"), admin: $("#screen-admin") };
+  const $ = (s)=>document.querySelector(s);
+  const screens={list:$("#screen-list"),player:$("#screen-player"),admin:$("#screen-admin")};
+  const grid=$("#grid"), listCount=$("#listCount"), adminCount=$("#adminCount");
+  const playerName=$("#playerName"), playerStars=$("#playerStars"), videoEl=$("#video");
+  const btnBack=$("#btnBack"), btnPlayPause=$("#btnPlayPause");
+  const btnGoList=$("#btnGoList"), btnGoAdmin=$("#btnGoAdmin");
+  const adminTbody=$("#adminTbody"), adminForm=$("#adminForm"), btnResetForm=$("#btnResetForm");
+  const btnDelete=$("#btnDelete"), btnAdminAdd=$("#btnAdminAdd"), btnSignOut=$("#btnSignOut");
+  const fId=$("#fId"), fFilePath=$("#fFilePath"), fName=$("#fName"), fDifficulty=$("#fDifficulty"), fFile=$("#fFile"), fileHint=$("#fileHint");
+  const authBox=$("#authBox"), authEmail=$("#authEmail"), authPass=$("#authPass"), btnLogin=$("#btnLogin");
+  const deleteModalEl=$("#deleteModal"), deleteTarget=$("#deleteTarget"), btnConfirmDelete=$("#btnConfirmDelete");
+  const deleteModal=new bootstrap.Modal(deleteModalEl);
+  const toastEl=$("#toast");
 
-  const grid = $("#grid");
-  const listCount = $("#listCount");
-  const adminCount = $("#adminCount");
+  function toast(msg){toastEl.textContent=msg;toastEl.classList.add("show");clearTimeout(toastEl._t);toastEl._t=setTimeout(()=>toastEl.classList.remove("show"),1600);}
+  function escapeHTML(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+  function starsHTML(n){let h="";for(let i=1;i<=5;i++)h+=`<span class="star ${i<=n?"":"off"}">★</span>`;return h;}
+  function setScreen(name){Object.values(screens).forEach(s=>s.classList.remove("active"));screens[name].classList.add("active");}
+  function safeFileName(name){return String(name).replace(/[^\w.\-()+\s]/g,"_").replace(/\s+/g,"_").slice(0,120);}
+  function publicUrlFor(path){const {data}=sb.storage.from(BUCKET).getPublicUrl(path);return data?.publicUrl||"";}
 
-  const playerName = $("#playerName");
-  const playerStars = $("#playerStars");
-  const videoEl = $("#video");
-
-  const btnBack = $("#btnBack");
-  const btnPlayPause = $("#btnPlayPause");
-
-  const btnGoList = $("#btnGoList");
-  const btnGoAdmin = $("#btnGoAdmin");
-
-  const adminTbody = $("#adminTbody");
-  const adminForm = $("#adminForm");
-  const btnResetForm = $("#btnResetForm");
-  const btnDelete = $("#btnDelete");
-  const btnAdminAdd = $("#btnAdminAdd");
-
-  const fId = $("#fId");
-  const fFilePath = $("#fFilePath");
-  const fName = $("#fName");
-  const fDifficulty = $("#fDifficulty");
-  const fFile = $("#fFile");
-  const fileHint = $("#fileHint");
-
-  const deleteModalEl = $("#deleteModal");
-  const deleteTarget = $("#deleteTarget");
-  const btnConfirmDelete = $("#btnConfirmDelete");
-  const deleteModal = new bootstrap.Modal(deleteModalEl);
-
-  const toastEl = $("#toast");
-  function toast(msg){
-    toastEl.textContent = msg;
-    toastEl.classList.add("show");
-    clearTimeout(toastEl._t);
-    toastEl._t = setTimeout(()=>toastEl.classList.remove("show"), 1600);
+  let VIDEOS=[];
+  async function loadVideos(){
+    const {data,error}=await sb.from(TABLE).select("id,name,difficulty,file_path,created_at").order("created_at",{ascending:false});
+    if(error){toast("목록 로드 실패");VIDEOS=[];return;}
+    VIDEOS=(data||[]).map(v=>({id:v.id,name:v.name,difficulty:v.difficulty,file_path:v.file_path}));
   }
 
-  function escapeHTML(s) {
-    return String(s ?? "").replace(/[&<>"']/g, (c) => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[c]));
-  }
-
-  function starsHTML(n) {
-    const max = 5;
-    let html = "";
-    for (let i = 1; i <= max; i++) html += `<span class="star ${i <= n ? "" : "off"}">★</span>`;
-    return html;
-  }
-
-  function setScreen(name) {
-    Object.values(screens).forEach(s => s.classList.remove("active"));
-    screens[name].classList.add("active");
-  }
-
-  function safeFileName(name){
-    return String(name).replace(/[^\w.\-()+\s]/g, "_").replace(/\s+/g, "_").slice(0, 120);
-  }
-
-  function publicUrlFor(path){
-    const { data } = sb.storage.from(BUCKET).getPublicUrl(path);
-    return data?.publicUrl || "";
-  }
-
-  let VIDEOS = [];
-
-  async function loadVideos() {
-    const { data, error } = await sb
-      .from(TABLE)
-      .select("id,name,difficulty,file_path,created_at")
-      .order("created_at", { ascending: false });
-
-    if (error) { toast("목록 로드 실패"); VIDEOS = []; return; }
-    VIDEOS = (data || []).map(v => ({
-      id: v.id,
-      name: v.name,
-      difficulty: v.difficulty,
-      file_path: v.file_path
-    }));
-  }
-
-  function renderList() {
-    listCount.textContent = String(VIDEOS.length);
-    grid.innerHTML = VIDEOS.map(v => `
+  function renderList(){
+    listCount.textContent=String(VIDEOS.length);
+    grid.innerHTML=VIDEOS.map(v=>`
       <div class="col-12 col-md-6 col-lg-4">
         <div class="card game-card h-100" role="button" tabindex="0" data-id="${escapeHTML(v.id)}">
           <div class="card-body">
             <div class="d-flex justify-content-between gap-2">
-              <div class="me-auto">
-                <div class="fw-bold text-dark">${escapeHTML(v.name)}</div>
-              </div>
-              <div class="stars">${starsHTML(Number(v.difficulty) || 1)}</div>
+              <div class="me-auto"><div class="fw-bold text-dark">${escapeHTML(v.name)}</div></div>
+              <div class="stars">${starsHTML(Number(v.difficulty)||1)}</div>
             </div>
           </div>
         </div>
-      </div>
-    `).join("");
-
-    grid.querySelectorAll("[data-id]").forEach(card => {
-      const id = card.getAttribute("data-id");
-      const open = () => openPlayer(id);
-      card.addEventListener("click", open);
-      card.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
-      });
+      </div>`).join("");
+    grid.querySelectorAll("[data-id]").forEach(card=>{
+      const id=card.getAttribute("data-id");
+      const open=()=>{window.location.hash=`#play=${encodeURIComponent(id)}`;};
+      card.addEventListener("click",open);
+      card.addEventListener("keydown",(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open();}});
     });
   }
 
-  function renderAdmin() {
-    adminCount.textContent = String(VIDEOS.length);
-    adminTbody.innerHTML = VIDEOS.map(v => `
+  function renderAdmin(){
+    adminCount.textContent=String(VIDEOS.length);
+    adminTbody.innerHTML=VIDEOS.map(v=>`
       <tr data-id="${escapeHTML(v.id)}" role="button" tabindex="0" title="클릭해서 편집">
         <td class="fw-semibold text-dark">${escapeHTML(v.name)}</td>
-        <td class="stars">${starsHTML(Number(v.difficulty) || 1)}</td>
-        <td class="small text-truncate" style="max-width: 260px;" title="${escapeHTML(v.file_path)}">${escapeHTML(v.file_path)}</td>
-      </tr>
-    `).join("");
-
-    adminTbody.querySelectorAll("tr[data-id]").forEach(row => {
-      const id = row.getAttribute("data-id");
-      const openEdit = () => {
-        const item = VIDEOS.find(x => x.id === id);
-        if (!item) return;
-        fillAdminForm(item);
-      };
-      row.addEventListener("click", openEdit);
-      row.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openEdit(); }
-      });
+        <td class="stars">${starsHTML(Number(v.difficulty)||1)}</td>
+        <td class="small text-truncate" style="max-width:260px;" title="${escapeHTML(v.file_path)}">${escapeHTML(v.file_path)}</td>
+      </tr>`).join("");
+    adminTbody.querySelectorAll("tr[data-id]").forEach(row=>{
+      const id=row.getAttribute("data-id");
+      const openEdit=()=>{const item=VIDEOS.find(x=>x.id===id);if(!item)return;fillAdminForm(item);};
+      row.addEventListener("click",openEdit);
+      row.addEventListener("keydown",(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openEdit();}});
     });
   }
 
-  async function openPlayer(id) {
-    const v = VIDEOS.find(x => x.id === id);
-    if (!v) return;
-
-    playerName.textContent = v.name;
-    playerStars.innerHTML = starsHTML(Number(v.difficulty) || 1);
-
-    const url = publicUrlFor(v.file_path);
-    if (!url) { toast("영상 URL 실패"); return; }
-
-    videoEl.src = url;
-    videoEl.load();
-    setScreen("player");
+  async function showPlayer(id){
+    const v=VIDEOS.find(x=>x.id===id); if(!v){window.location.hash="#list";return;}
+    playerName.textContent=v.name; playerStars.innerHTML=starsHTML(Number(v.difficulty)||1);
+    const url=publicUrlFor(v.file_path); if(!url){toast("영상 URL 실패");window.location.hash="#list";return;}
+    videoEl.src=url; videoEl.load(); setScreen("player");
   }
 
-  function resetAdminForm() {
-    fId.value = "";
-    fFilePath.value = "";
-    fName.value = "";
-    fDifficulty.value = "3";
-    fFile.value = "";
-    btnDelete.disabled = true;
-    fileHint.textContent = "";
+  function resetAdminForm(){
+    fId.value=""; fFilePath.value=""; fName.value=""; fDifficulty.value="3"; fFile.value="";
+    btnDelete.disabled=true; fileHint.textContent="";
+  }
+  function fillAdminForm(item){
+    fId.value=item.id; fFilePath.value=item.file_path; fName.value=item.name; fDifficulty.value=String(item.difficulty);
+    fFile.value=""; btnDelete.disabled=false; fileHint.textContent="파일 유지 (바꾸려면 새 파일 선택)";
   }
 
-  function fillAdminForm(item) {
-    fId.value = item.id;
-    fFilePath.value = item.file_path;
-    fName.value = item.name;
-    fDifficulty.value = String(item.difficulty);
-    fFile.value = "";
-    btnDelete.disabled = false;
-    fileHint.textContent = "파일 유지 (바꾸려면 새 파일 선택)";
+  async function syncAuthUI(){
+    const {data:{session}}=await sb.auth.getSession();
+    const ok=!!session?.user;
+    authBox.classList.toggle("d-none", ok);
+    adminForm.classList.toggle("d-none", !ok);
+    btnResetForm.classList.toggle("d-none", !ok);
+    btnAdminAdd.classList.toggle("d-none", !ok);
+    btnSignOut.classList.toggle("d-none", !ok);
+    if(!ok) resetAdminForm();
+    return ok;
   }
 
-  // Save (insert/update + upload if file selected)
-  adminForm.addEventListener("submit", async (e) => {
+  btnLogin.addEventListener("click", async ()=>{
+    const email=authEmail.value.trim();
+    const password=authPass.value;
+    if(!email||!password) return;
+    const {error}=await sb.auth.signInWithPassword({email,password});
+    if(error){toast("로그인 실패");return;}
+    toast("로그인됨");
+    await refreshAll();
+  });
+
+  btnSignOut.addEventListener("click", async ()=>{
+    await sb.auth.signOut();
+    toast("로그아웃");
+    await refreshAll();
+  });
+
+  adminForm.addEventListener("submit", async (e)=>{
     e.preventDefault();
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session?.user){toast("로그인 필요");return;}
 
-    const name = fName.value.trim();
-    const difficulty = Math.min(5, Math.max(1, Number(fDifficulty.value) || 1));
-    const id = fId.value.trim();
-    const oldPath = fFilePath.value.trim();
-    const file = fFile.files && fFile.files[0];
+    const name=fName.value.trim();
+    const difficulty=Math.min(5,Math.max(1,Number(fDifficulty.value)||1));
+    const id=fId.value.trim();
+    const oldPath=fFilePath.value.trim();
+    const file=fFile.files&&fFile.files[0];
 
-    if (!name) return;
-    if (!id && !file) { toast("영상 파일 선택"); return; }
-    if (file && file.size > MAX_FILE_MB * 1024 * 1024) { toast(`${MAX_FILE_MB}MB 이하만`); return; }
+    if(!name) return;
+    if(!id && !file){toast("영상 파일 선택");return;}
+    if(file && file.size>MAX_FILE_MB*1024*1024){toast(`${MAX_FILE_MB}MB 이하만`);return;}
 
-    let newPath = oldPath;
+    let newPath=oldPath;
 
-    if (file) {
-      const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
-      const safe = safeFileName(file.name);
-      newPath = `public/${Date.now()}_${safe}.${ext}`.replace(/\.{2,}/g, ".");
-      const { error: upErr } = await sb.storage.from(BUCKET).upload(newPath, file, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: file.type || undefined,
-      });
-      if (upErr) { toast("업로드 실패"); return; }
+    if(file){
+      const ext=(file.name.split(".").pop()||"mp4").toLowerCase();
+      const safe=safeFileName(file.name);
+      newPath=`${session.user.id}/${Date.now()}_${safe}.${ext}`.replace(/\.{2,}/g,".");
+      const {error:upErr}=await sb.storage.from(BUCKET).upload(newPath,file,{cacheControl:"3600",upsert:false,contentType:file.type||undefined});
+      if(upErr){toast("업로드 실패");return;}
     }
 
-    if (!id) {
-      const { error } = await sb.from(TABLE).insert([{ name, difficulty, file_path: newPath }]);
-      if (error) {
-        if (file && newPath) await sb.storage.from(BUCKET).remove([newPath]);
-        toast("저장 실패");
-        return;
+    if(!id){
+      const {error}=await sb.from(TABLE).insert([{name,difficulty,file_path:newPath}]);
+      if(error){
+        if(file && newPath) await sb.storage.from(BUCKET).remove([newPath]);
+        toast("저장 실패"); return;
       }
-    } else {
-      const { error } = await sb.from(TABLE)
-        .update({ name, difficulty, file_path: newPath })
-        .eq("id", id);
-
-      if (error) {
-        if (file && newPath && newPath !== oldPath) await sb.storage.from(BUCKET).remove([newPath]);
-        toast("수정 실패");
-        return;
+    }else{
+      const {error}=await sb.from(TABLE).update({name,difficulty,file_path:newPath}).eq("id",id);
+      if(error){
+        if(file && newPath && newPath!==oldPath) await sb.storage.from(BUCKET).remove([newPath]);
+        toast("수정 실패"); return;
       }
-
-      if (file && oldPath && newPath !== oldPath) {
-        await sb.storage.from(BUCKET).remove([oldPath]);
-      }
+      if(file && oldPath && newPath!==oldPath) await sb.storage.from(BUCKET).remove([oldPath]);
     }
 
     toast("저장됨");
@@ -497,32 +344,22 @@
     await refreshAll();
   });
 
-  // Delete confirm
-  let pendingDeleteId = null;
-
-  btnDelete.addEventListener("click", () => {
-    const id = fId.value.trim();
-    if (!id) return;
-    const item = VIDEOS.find(x => x.id === id);
-    if (!item) return;
-
-    pendingDeleteId = id;
-    deleteTarget.textContent = item.name;
-    deleteModal.show();
+  let pendingDeleteId=null;
+  btnDelete.addEventListener("click", ()=>{
+    const id=fId.value.trim(); if(!id) return;
+    const item=VIDEOS.find(x=>x.id===id); if(!item) return;
+    pendingDeleteId=id; deleteTarget.textContent=item.name; deleteModal.show();
   });
 
-  btnConfirmDelete.addEventListener("click", async () => {
-    const id = pendingDeleteId;
-    pendingDeleteId = null;
-    if (!id) return;
+  btnConfirmDelete.addEventListener("click", async ()=>{
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session?.user){toast("로그인 필요");return;}
+    const id=pendingDeleteId; pendingDeleteId=null; if(!id) return;
+    const item=VIDEOS.find(x=>x.id===id); if(!item){deleteModal.hide();return;}
 
-    const item = VIDEOS.find(x => x.id === id);
-    if (!item) { deleteModal.hide(); return; }
-
-    const { error: delErr } = await sb.from(TABLE).delete().eq("id", id);
-    if (delErr) { toast("삭제 실패"); return; }
-
-    if (item.file_path) await sb.storage.from(BUCKET).remove([item.file_path]);
+    const {error:delErr}=await sb.from(TABLE).delete().eq("id",id);
+    if(delErr){toast("삭제 실패");return;}
+    if(item.file_path) await sb.storage.from(BUCKET).remove([item.file_path]);
 
     deleteModal.hide();
     toast("삭제됨");
@@ -530,57 +367,38 @@
     await refreshAll();
   });
 
-  // Nav
-  function goList(){
-    try { videoEl.pause(); } catch {}
-    window.location.hash = "#list";
-  }
-  btnGoList.addEventListener("click", goList);
-  btnGoAdmin.addEventListener("click", () => window.location.hash = "#admin");
-  btnBack.addEventListener("click", goList);
-
-  btnPlayPause.addEventListener("click", () => {
-    if (videoEl.paused) videoEl.play(); else videoEl.pause();
-  });
-
-  btnAdminAdd.addEventListener("click", () => { resetAdminForm(); fName.focus(); });
+  btnGoList.addEventListener("click", ()=>window.location.hash="#list");
+  btnGoAdmin.addEventListener("click", ()=>window.location.hash="#admin");
+  btnBack.addEventListener("click", ()=>window.location.hash="#list");
+  btnPlayPause.addEventListener("click", ()=>{ if(videoEl.paused) videoEl.play(); else videoEl.pause(); });
+  btnAdminAdd.addEventListener("click", ()=>{ resetAdminForm(); fName.focus(); });
   btnResetForm.addEventListener("click", resetAdminForm);
 
-  window.addEventListener("keydown", (e) => {
-    const tag = (document.activeElement && document.activeElement.tagName) || "";
-    const inInput = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
-
-    if (!inInput && e.code === "Space" && screens.player.classList.contains("active")) {
-      e.preventDefault();
-      if (videoEl.paused) videoEl.play(); else videoEl.pause();
+  window.addEventListener("keydown",(e)=>{
+    const tag=(document.activeElement&&document.activeElement.tagName)||"";
+    const inInput=tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT";
+    if(!inInput && e.code==="Space" && screens.player.classList.contains("active")){
+      e.preventDefault(); if(videoEl.paused) videoEl.play(); else videoEl.pause();
     }
-    if (e.key === "Escape" && screens.player.classList.contains("active")) goList();
+    if(e.key==="Escape" && screens.player.classList.contains("active")) window.location.hash="#list";
   });
 
   async function refreshAll(){
     await loadVideos();
     renderList();
     renderAdmin();
+    await syncAuthUI();
   }
 
   async function route(){
-    const hash = window.location.hash || "#list";
-    const mPlay = hash.match(/^#play=(.+)$/);
-
-    if (mPlay) {
-      await refreshAll();
-      await openPlayer(decodeURIComponent(mPlay[1]));
-      return;
-    }
-    if (hash === "#admin") {
-      setScreen("admin");
-      await refreshAll();
-      return;
-    }
-    setScreen("list");
-    await refreshAll();
+    const hash=window.location.hash||"#list";
+    const m=hash.match(/^#play=(.+)$/);
+    if(m){ await refreshAll(); await showPlayer(decodeURIComponent(m[1])); return; }
+    if(hash==="#admin"){ setScreen("admin"); await refreshAll(); return; }
+    setScreen("list"); await refreshAll();
   }
 
+  sb.auth.onAuthStateChange(async ()=>{ await refreshAll(); });
   window.addEventListener("hashchange", route);
   route();
 </script>
