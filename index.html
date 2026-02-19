@@ -406,7 +406,9 @@
 
     try{
       // 캐시 문제 방지 (깃허브 페이지에서 갱신이 바로 안 보일 수 있어서)
-      const res = await fetch("./videos.json?ts=" + Date.now(), { cache: "no-store" });
+      const url = new URL("videos.json", window.location.href);
+      url.searchParams.set("ts", Date.now());
+      const res = await fetch(url.toString(), { cache: "no-store" });
       if (!res.ok) throw new Error("videos.json 로드 실패: " + res.status);
       const data = await res.json();
       VIDEOS = Array.isArray(data) ? data : [];
