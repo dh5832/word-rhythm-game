@@ -374,6 +374,23 @@
   let VIDEOS = [];
   let loaded = false;
 
+
+  const SCORE_KEY = "wr_score_overrides_v1";
+
+  function loadScoreOverrides(){
+    try { return JSON.parse(sessionStorage.getItem(SCORE_KEY) || "{}"); }
+    catch { return {}; }
+  }
+  function saveScoreOverrides(map){
+    sessionStorage.setItem(SCORE_KEY, JSON.stringify(map || {}));
+  }
+  function getScore(v){
+    const map = loadScoreOverrides();
+    const id = String(v.id ?? "");
+    if (id && map[id] !== undefined) return Number(map[id]) || 0;
+    return Number(v.score ?? 0) || 0; // videos.json에 score가 있으면 기본값으로 사용
+  }
+
   function toast(msg){
     toastEl.textContent = msg;
     toastEl.classList.add("show");
@@ -464,36 +481,77 @@
     });
   }
 
-  function renderAdminReadOnly(){
-    // 관리자 화면은 "보기 전용"으로만 제공 (추가/업로드 없음)
-    adminCount.textContent = String(VIDEOS.length);
+    function renderAdminReadOnly(){
+      adminCount.textContent = String(VIDEOS.length);
+    
+      const scoreMap = loadScoreOverrides();
+    
+      adminTbody.innerHTML = VIDEOS.map(v => {
+        const ok = !!(v.url && typeof v.url === "string");
+        const id = String(v.id ?? "");
+        const currentScore = (scoreMap[id] !== undefined ? scoreMap[id] : (Number(v.score ?? 0) || 0));
+    
+        return `
+          <tr data-id="${escapeHTML(id)}">
+            <td class="fw-semibold text-dark">
+              <div>${escapeHTML(v.name || "")}</div>
+    
+              <div class="d-flex align-items-center gap-2 mt-2">
+                <span class="muted small">성공 점수</span>
+                <input class="form-control form-control-sm score-input"
+                       style="max-width: 120px;"
+                       type="number" min="0" step="1"
+                       value="${escapeHTML(currentScore)}" />
+                <button class="btn btn-sm btn-outline-primary score-save" type="button">저장</button>
+              </div>
+    
+              ${(v.memo || "").trim() ? `<div class="muted small mt-2">${escapeHTML(v.memo)}</div>` : ``}
+            </td>
+    
+            <td class="stars">${starsHTML(v.difficulty)}</td>
+    
+            <td class="small ${ok ? "text-success" : "text-danger"}">
+              ${ok ? "양호" : "불가"}
+            </td>
+          </tr>
+        `;
+      }).join("");
+    
+      // 점수 저장 핸들러 (sessionStorage에만 저장)
+      adminTbody.querySelectorAll("tr[data-id]").forEach(tr => {
+        const id = tr.getAttribute("data-id");
+        const input = tr.querySelector(".score-input");
+        const btn = tr.querySelector(".score-save");
+    
+        const save = () => {
+          const val = Math.max(0, Number(input.value || 0) || 0);
+          input.value = String(val);
+    
+          const map = loadScoreOverrides();
+          map[id] = val;
+          saveScoreOverrides(map);
+    
+          toast("점수 저장됨(새로고침 전까지)");
+        };
+    
+        btn.addEventListener("click", save);
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") { e.preventDefault(); save(); }
+        });
+      });
+    
+      // 기존 폼/버튼 숨김
+      $("#authBox")?.classList.add("d-none");
+      $("#adminLocked")?.classList.remove("d-none");
+      $("#adminLocked").textContent =
+        "점수는 새로고침 전까지만 유지됩니다(sessionStorage). 영구 저장/기기 공유는 videos.json 수정이 필요해요.";
+      $("#adminForm")?.classList.add("d-none");
+      $("#btnResetForm")?.classList.add("d-none");
+      $("#btnAdminAdd")?.classList.add("d-none");
+      $("#btnRelink")?.classList.add("d-none");
+      $("#btnSignOut")?.classList.add("d-none");
+    }
 
-    adminTbody.innerHTML = VIDEOS.map(v => {
-      const ok = !!(v.url && typeof v.url === "string");
-      return `
-        <tr>
-          <td class="fw-semibold text-dark">
-            <div>${escapeHTML(v.name || "")}</div>
-            ${(v.memo || "").trim() ? `<div class="muted small">${escapeHTML(v.memo)}</div>` : ``}
-          </td>
-          <td class="stars">${starsHTML(v.difficulty)}</td>
-          <td class="small ${ok ? "text-success" : "text-danger"}">
-            ${ok ? "양호" : "누락"}
-          </td>
-        </tr>
-      `;
-    }).join("");
-
-    // 기존 폼/버튼은 숨김 처리
-    $("#authBox")?.classList.add("d-none");
-    $("#adminLocked")?.classList.remove("d-none");
-    $("#adminLocked").textContent = "영상을 추가하고 싶다면 관리자에게 문의하세요.";
-    $("#adminForm")?.classList.add("d-none");
-    $("#btnResetForm")?.classList.add("d-none");
-    $("#btnAdminAdd")?.classList.add("d-none");
-    $("#btnRelink")?.classList.add("d-none");
-    $("#btnSignOut")?.classList.add("d-none");
-  }
 
   function showPlayer(id) {
     const v = VIDEOS.find(x => String(x.id) === String(id));
