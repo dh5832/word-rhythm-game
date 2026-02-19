@@ -1,0 +1,59 @@
+[
+  {
+    "id": "2026-02-19-01",
+    "name": "한글자",
+    "memo": "",
+    "difficulty": 1,
+    "url": "https://YOUR_PUBLIC_URL/video1.mp4"
+  }
+]
+
+[
+  {
+    "id": "2026-02-19-01",
+    "name": "요",
+    "memo": "",
+    "difficulty": 2,
+    "url": "https://YOUR_PUBLIC_URL/video1.mp4"
+  }
+]
+
+[
+  {
+    "id": "2026-02-19-01",
+    "name": "귤",
+    "memo": "",
+    "difficulty": 3,
+    "url": "https://YOUR_PUBLIC_URL/video1.mp4"
+  }
+]
+
+[
+  {
+    "id": "2026-02-19-01",
+    "name": "사",
+    "memo": "",
+    "difficulty": 3,
+    "url": "https://YOUR_PUBLIC_URL/video1.mp4"
+  }
+]
+
+[
+  {
+    "id": "2026-02-19-01",
+    "name": "베리",
+    "memo": "",
+    "difficulty": 4,
+    "url": "https://YOUR_PUBLIC_URL/video1.mp4"
+  }
+]
+
+[
+  {
+    "id": "2026-02-19-01",
+    "name": "라떼",
+    "memo": "",
+    "difficulty": 5,
+    "url": "https://YOUR_PUBLIC_URL/video1.mp4"
+  }
+]
