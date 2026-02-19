@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Word Rhythm Video</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/minty/bootstrap.min.css">
+  <style>
+    :root{
+      --glow: 0 10px 30px rgba(16,24,40,.12);
+      --stroke: rgba(15,23,42,.10);
+      --grad1: rgba(99,102,241,.14);
+      --grad2: rgba(34,211,238,.14);
+      --ink: #0f172a;
+    }
+    body{
+      background:
+        radial-gradient(900px 480px at 15% 0%, var(--grad1), transparent 55%),
+        radial-gradient(900px 480px at 85% 5%, var(--grad2), transparent 55%),
+        #f7fafc;
+      min-height: 100vh;
+      color: var(--ink);
+    }
+    .navbar{
+      background: rgba(255,255,255,.78) !important;
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--stroke);
+      box-shadow: var(--glow);
+    }
+    .brand-dot{
+      width:10px;height:10px;border-radius:999px;
+      background: linear-gradient(135deg,#6366f1,#22d3ee);
+      display:inline-block; margin-right:.6rem;
+      box-shadow: 0 0 0 6px rgba(99,102,241,.08);
+    }
+    .screen{ display:none; }
+    .screen.active{ display:block; }
+    .game-card{
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.92);
+      box-shadow: var(--glow);
+      transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+      will-change: transform;
+      animation: popIn .18s ease-out both;
+    }
+    .game-card:hover{
+      transform: translateY(-2px);
+      border-color: rgba(99,102,241,.22);
+      box-shadow: 0 16px 40px rgba(16,24,40,.14);
+    }
+    @keyframes popIn{ from{ transform: translateY(6px); opacity: 0; } to{ transform: translateY(0); opacity: 1; } }
+    .btn-neo{
+      border: 1px solid rgba(99,102,241,.22);
+      background: linear-gradient(135deg, rgba(99,102,241,.18), rgba(34,211,238,.16));
+      color: var(--ink) !important;
+      font-weight: 600;
+    }
+    .btn-neo:hover{
+      border-color: rgba(99,102,241,.35);
+      box-shadow: 0 10px 26px rgba(99,102,241,.16);
+      color: var(--ink) !important;
+    }
+    .badge-soft{
+      border: 1px solid rgba(15,23,42,.10);
+      background: rgba(15,23,42,.04);
+      color: var(--ink);
+    }
+    .stars{ white-space:nowrap; }
+    .stars .star{ font-size: 1rem; line-height: 1; color: #f59e0b; }
+    .stars .off{ opacity:.28; }
+    .muted{ color: rgba(15,23,42,.66) !important; }
+    .hr-soft{
+      border: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(15,23,42,.16), transparent);
+      opacity: 1;
+    }
+    video{
+      width:100%;
+      border-radius: 16px;
+      border: 1px solid var(--stroke);
+      background:#000;
+      box-shadow: 0 16px 44px rgba(16,24,40,.12);
+      max-height: 72vh;
+    }
+    .table thead th{
+      background: rgba(15,23,42,.04);
+      border-bottom: 1px solid rgba(15,23,42,.10) !important;
+    }
+    .table-hover tbody tr:hover{
+      background: rgba(99,102,241,.06);
+      cursor: pointer;
+    }
+    .toastish{
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 1080;
+      min-width: 240px;
+      max-width: 420px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(15,23,42,.10);
+      background: rgba(255,255,255,.92);
+      box-shadow: 0 18px 50px rgba(16,24,40,.14);
+      display:none;
+    }
+    .toastish.show{ display:block; animation: toastIn .18s ease-out both; }
+    @keyframes toastIn{ from{ transform: translateY(10px); opacity: 0; } to{ transform: translateY(0); opacity: 1; } }
+  </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg sticky-top">
+  <div class="container">
+    <a class="navbar-brand fw-bold text-dark" href="#list">
+      <span class="brand-dot"></span>Word Rhythm Videos
+    </a>
+    <div class="ms-auto d-flex gap-2">
+      <button id="btnGoList" class="btn btn-sm btn-outline-primary">목록</button>
+      <button id="btnGoAdmin" class="btn btn-sm btn-neo">관리자</button>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-4">
+  <section id="screen-list" class="screen active">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+      <span class="badge badge-soft rounded-pill px-3 py-2">
+        총 <span id="listCount">0</span>개
+      </span>
+    </div>
+    <div id="grid" class="row g-3"></div>
+  </section>
+
+  <section id="screen-player" class="screen">
+    <div class="card game-card">
+      <div class="card-body">
+        <div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-2">
+          <div class="me-auto">
+            <h5 id="playerName" class="mb-1 fw-bold text-dark">-</h5>
+            <div id="playerStars" class="stars mb-1"></div>
+          </div>
+          <div class="d-flex gap-2 flex-wrap">
+            <button id="btnBack" class="btn btn-outline-primary">← 뒤로</button>
+            <button id="btnPlayPause" class="btn btn-neo">⏯ 재생/일시정지</button>
+          </div>
+        </div>
+        <hr class="hr-soft my-3">
+        <video id="video" controls playsinline preload="metadata"></video>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-admin" class="screen">
+    <div class="row g-3">
+      <div class="col-12 col-lg-5">
+        <div class="card game-card">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between">
+              <h5 class="mb-0 fw-bold text-dark">관리자</h5>
+              <button id="btnResetForm" class="btn btn-sm btn-outline-secondary" type="button">새로</button>
+            </div>
+
+            <hr class="hr-soft my-3">
+
+            <form id="adminForm">
+              <input type="hidden" id="fId" />
+              <input type="hidden" id="fFilePath" />
+
+              <div class="mb-3">
+                <label class="form-label">이름</label>
+                <input id="fName" class="form-control" maxlength="60" required />
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">난이도 (1~5)</label>
+                <select id="fDifficulty" class="form-select" required>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3" selected>3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">영상 업로드</label>
+                <input id="fFile" type="file" class="form-control" accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-m4v" />
+                <div id="fileHint" class="muted small mt-1"></div>
+              </div>
+
+              <div class="d-flex gap-2">
+                <button id="btnSave" class="btn btn-neo flex-grow-1" type="submit">저장</button>
+                <button id="btnDelete" class="btn btn-outline-danger" type="button" disabled>삭제</button>
+              </div>
+            </form>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-7">
+        <div class="card game-card">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+              <h5 class="mb-0 fw-bold text-dark">영상 목록</h5>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge badge-soft rounded-pill px-3 py-2">
+                  총 <span id="adminCount">0</span>개
+                </span>
+                <button id="btnAdminAdd" class="btn btn-sm btn-neo" type="button">+ 추가</button>
+              </div>
+            </div>
+
+            <hr class="hr-soft my-3">
+
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr>
+                  <th style="width: 56%;">이름</th>
+                  <th style="width: 18%;">난이도</th>
+                  <th style="width: 26%;">파일</th>
+                </tr>
+                </thead>
+                <tbody id="adminTbody"></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">삭제 확인</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-dark">정말 삭제할까요?</div>
+        <div id="deleteTarget" class="muted small mt-1"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">취소</button>
+        <button type="button" class="btn btn-danger" id="btnConfirmDelete">삭제</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toastish"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+<script>
+  // ✅ Your Supabase
+  const SUPABASE_URL = "https://vnpvxeytnugohahzrbfi.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZucHZ4ZXl0bnVnb2hhaHpyYmZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NDc1NjUsImV4cCI6MjA4NzAyMzU2NX0.0smAE33iV10VKU2uGI4BxyfHq2EjtQBATcHJuSgKnMo";
+  const BUCKET = "videos";
+  const TABLE = "videos";
+  const MAX_FILE_MB = 300;
+
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const $ = (s) => document.querySelector(s);
+  const screens = { list: $("#screen-list"), player: $("#screen-player"), admin: $("#screen-admin") };
+
+  const grid = $("#grid");
+  const listCount = $("#listCount");
+  const adminCount = $("#adminCount");
+
+  const playerName = $("#playerName");
+  const playerStars = $("#playerStars");
+  const videoEl = $("#video");
+
+  const btnBack = $("#btnBack");
+  const btnPlayPause = $("#btnPlayPause");
+
+  const btnGoList = $("#btnGoList");
+  const btnGoAdmin = $("#btnGoAdmin");
+
+  const adminTbody = $("#adminTbody");
+  const adminForm = $("#adminForm");
+  const btnResetForm = $("#btnResetForm");
+  const btnDelete = $("#btnDelete");
+  const btnAdminAdd = $("#btnAdminAdd");
+
+  const fId = $("#fId");
+  const fFilePath = $("#fFilePath");
+  const fName = $("#fName");
+  const fDifficulty = $("#fDifficulty");
+  const fFile = $("#fFile");
+  const fileHint = $("#fileHint");
+
+  const deleteModalEl = $("#deleteModal");
+  const deleteTarget = $("#deleteTarget");
+  const btnConfirmDelete = $("#btnConfirmDelete");
+  const deleteModal = new bootstrap.Modal(deleteModalEl);
+
+  const toastEl = $("#toast");
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastEl._t);
+    toastEl._t = setTimeout(()=>toastEl.classList.remove("show"), 1600);
+  }
+
+  function escapeHTML(s) {
+    return String(s ?? "").replace(/[&<>"']/g, (c) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  function starsHTML(n) {
+    const max = 5;
+    let html = "";
+    for (let i = 1; i <= max; i++) html += `<span class="star ${i <= n ? "" : "off"}">★</span>`;
+    return html;
+  }
+
+  function setScreen(name) {
+    Object.values(screens).forEach(s => s.classList.remove("active"));
+    screens[name].classList.add("active");
+  }
+
+  function safeFileName(name){
+    return String(name).replace(/[^\w.\-()+\s]/g, "_").replace(/\s+/g, "_").slice(0, 120);
+  }
+
+  function publicUrlFor(path){
+    const { data } = sb.storage.from(BUCKET).getPublicUrl(path);
+    return data?.publicUrl || "";
+  }
+
+  let VIDEOS = [];
+
+  async function loadVideos() {
+    const { data, error } = await sb
+      .from(TABLE)
+      .select("id,name,difficulty,file_path,created_at")
+      .order("created_at", { ascending: false });
+
+    if (error) { toast("목록 로드 실패"); VIDEOS = []; return; }
+    VIDEOS = (data || []).map(v => ({
+      id: v.id,
+      name: v.name,
+      difficulty: v.difficulty,
+      file_path: v.file_path
+    }));
+  }
+
+  function renderList() {
+    listCount.textContent = String(VIDEOS.length);
+    grid.innerHTML = VIDEOS.map(v => `
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card game-card h-100" role="button" tabindex="0" data-id="${escapeHTML(v.id)}">
+          <div class="card-body">
+            <div class="d-flex justify-content-between gap-2">
+              <div class="me-auto">
+                <div class="fw-bold text-dark">${escapeHTML(v.name)}</div>
+              </div>
+              <div class="stars">${starsHTML(Number(v.difficulty) || 1)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `).join("");
+
+    grid.querySelectorAll("[data-id]").forEach(card => {
+      const id = card.getAttribute("data-id");
+      const open = () => openPlayer(id);
+      card.addEventListener("click", open);
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
+      });
+    });
+  }
+
+  function renderAdmin() {
+    adminCount.textContent = String(VIDEOS.length);
+    adminTbody.innerHTML = VIDEOS.map(v => `
+      <tr data-id="${escapeHTML(v.id)}" role="button" tabindex="0" title="클릭해서 편집">
+        <td class="fw-semibold text-dark">${escapeHTML(v.name)}</td>
+        <td class="stars">${starsHTML(Number(v.difficulty) || 1)}</td>
+        <td class="small text-truncate" style="max-width: 260px;" title="${escapeHTML(v.file_path)}">${escapeHTML(v.file_path)}</td>
+      </tr>
+    `).join("");
+
+    adminTbody.querySelectorAll("tr[data-id]").forEach(row => {
+      const id = row.getAttribute("data-id");
+      const openEdit = () => {
+        const item = VIDEOS.find(x => x.id === id);
+        if (!item) return;
+        fillAdminForm(item);
+      };
+      row.addEventListener("click", openEdit);
+      row.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openEdit(); }
+      });
+    });
+  }
+
+  async function openPlayer(id) {
+    const v = VIDEOS.find(x => x.id === id);
+    if (!v) return;
+
+    playerName.textContent = v.name;
+    playerStars.innerHTML = starsHTML(Number(v.difficulty) || 1);
+
+    const url = publicUrlFor(v.file_path);
+    if (!url) { toast("영상 URL 실패"); return; }
+
+    videoEl.src = url;
+    videoEl.load();
+    setScreen("player");
+  }
+
+  function resetAdminForm() {
+    fId.value = "";
+    fFilePath.value = "";
+    fName.value = "";
+    fDifficulty.value = "3";
+    fFile.value = "";
+    btnDelete.disabled = true;
+    fileHint.textContent = "";
+  }
+
+  function fillAdminForm(item) {
+    fId.value = item.id;
+    fFilePath.value = item.file_path;
+    fName.value = item.name;
+    fDifficulty.value = String(item.difficulty);
+    fFile.value = "";
+    btnDelete.disabled = false;
+    fileHint.textContent = "파일 유지 (바꾸려면 새 파일 선택)";
+  }
+
+  // Save (insert/update + upload if file selected)
+  adminForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const name = fName.value.trim();
+    const difficulty = Math.min(5, Math.max(1, Number(fDifficulty.value) || 1));
+    const id = fId.value.trim();
+    const oldPath = fFilePath.value.trim();
+    const file = fFile.files && fFile.files[0];
+
+    if (!name) return;
+    if (!id && !file) { toast("영상 파일 선택"); return; }
+    if (file && file.size > MAX_FILE_MB * 1024 * 1024) { toast(`${MAX_FILE_MB}MB 이하만`); return; }
+
+    let newPath = oldPath;
+
+    if (file) {
+      const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
+      const safe = safeFileName(file.name);
+      newPath = `public/${Date.now()}_${safe}.${ext}`.replace(/\.{2,}/g, ".");
+      const { error: upErr } = await sb.storage.from(BUCKET).upload(newPath, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type || undefined,
+      });
+      if (upErr) { toast("업로드 실패"); return; }
+    }
+
+    if (!id) {
+      const { error } = await sb.from(TABLE).insert([{ name, difficulty, file_path: newPath }]);
+      if (error) {
+        if (file && newPath) await sb.storage.from(BUCKET).remove([newPath]);
+        toast("저장 실패");
+        return;
+      }
+    } else {
+      const { error } = await sb.from(TABLE)
+        .update({ name, difficulty, file_path: newPath })
+        .eq("id", id);
+
+      if (error) {
+        if (file && newPath && newPath !== oldPath) await sb.storage.from(BUCKET).remove([newPath]);
+        toast("수정 실패");
+        return;
+      }
+
+      if (file && oldPath && newPath !== oldPath) {
+        await sb.storage.from(BUCKET).remove([oldPath]);
+      }
+    }
+
+    toast("저장됨");
+    resetAdminForm();
+    await refreshAll();
+  });
+
+  // Delete confirm
+  let pendingDeleteId = null;
+
+  btnDelete.addEventListener("click", () => {
+    const id = fId.value.trim();
+    if (!id) return;
+    const item = VIDEOS.find(x => x.id === id);
+    if (!item) return;
+
+    pendingDeleteId = id;
+    deleteTarget.textContent = item.name;
+    deleteModal.show();
+  });
+
+  btnConfirmDelete.addEventListener("click", async () => {
+    const id = pendingDeleteId;
+    pendingDeleteId = null;
+    if (!id) return;
+
+    const item = VIDEOS.find(x => x.id === id);
+    if (!item) { deleteModal.hide(); return; }
+
+    const { error: delErr } = await sb.from(TABLE).delete().eq("id", id);
+    if (delErr) { toast("삭제 실패"); return; }
+
+    if (item.file_path) await sb.storage.from(BUCKET).remove([item.file_path]);
+
+    deleteModal.hide();
+    toast("삭제됨");
+    resetAdminForm();
+    await refreshAll();
+  });
+
+  // Nav
+  function goList(){
+    try { videoEl.pause(); } catch {}
+    window.location.hash = "#list";
+  }
+  btnGoList.addEventListener("click", goList);
+  btnGoAdmin.addEventListener("click", () => window.location.hash = "#admin");
+  btnBack.addEventListener("click", goList);
+
+  btnPlayPause.addEventListener("click", () => {
+    if (videoEl.paused) videoEl.play(); else videoEl.pause();
+  });
+
+  btnAdminAdd.addEventListener("click", () => { resetAdminForm(); fName.focus(); });
+  btnResetForm.addEventListener("click", resetAdminForm);
+
+  window.addEventListener("keydown", (e) => {
+    const tag = (document.activeElement && document.activeElement.tagName) || "";
+    const inInput = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+
+    if (!inInput && e.code === "Space" && screens.player.classList.contains("active")) {
+      e.preventDefault();
+      if (videoEl.paused) videoEl.play(); else videoEl.pause();
+    }
+    if (e.key === "Escape" && screens.player.classList.contains("active")) goList();
+  });
+
+  async function refreshAll(){
+    await loadVideos();
+    renderList();
+    renderAdmin();
+  }
+
+  async function route(){
+    const hash = window.location.hash || "#list";
+    const mPlay = hash.match(/^#play=(.+)$/);
+
+    if (mPlay) {
+      await refreshAll();
+      await openPlayer(decodeURIComponent(mPlay[1]));
+      return;
+    }
+    if (hash === "#admin") {
+      setScreen("admin");
+      await refreshAll();
+      return;
+    }
+    setScreen("list");
+    await refreshAll();
+  }
+
+  window.addEventListener("hashchange", route);
+  route();
+</script>
+</body>
+</html>
