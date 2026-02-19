@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Word Rhythm Video</title>
+  <title>단어리듬게임</title>
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/minty/bootstrap.min.css">
 
@@ -186,7 +186,6 @@
             <div class="me-auto">
               <h5 id="playerName" class="mb-1 fw-bold text-dark">-</h5>
               <div id="playerStars" class="stars mb-1"></div>
-              <div class="muted small">※ 링크는 짧게 만료됩니다.</div>
             </div>
             <div class="d-flex gap-2 flex-wrap">
               <button id="btnBack" class="btn btn-outline-primary">← 뒤로</button>
@@ -267,6 +266,10 @@
                   <label class="form-label">영상 업로드</label>
                   <input id="fFile" type="file" class="form-control" accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-m4v" />
                   <div id="fileHint" class="muted small mt-1"></div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">메모</label>
+                  <input id="fMemo" class="form-control" maxlength="120" placeholder="목록에 표시될 문구(예: 오늘의 말씀/레벨 설명 등)" />
                 </div>
 
                 <div class="d-flex gap-2">
@@ -350,6 +353,7 @@
   const $ = (s) => document.querySelector(s);
   const screens = { list: $("#screen-list"), player: $("#screen-player"), admin: $("#screen-admin") };
 
+  const fMemo = $("#fMemo");
   const grid = $("#grid");
   const listCount = $("#listCount");
   const adminCount = $("#adminCount");
@@ -454,7 +458,7 @@
               <div class="stars">${starsHTML(Number(v.difficulty) || 1)}</div>
             </div>
             <div class="muted small mt-2">
-              ${v.fileKey ? (escapeHTML(v.fileKey.split("::")[0])) : "파일 미연결"}
+              ${escapeHTML(v.memo || v.name || "-")}
             </div>
           </div>
         </div>
@@ -538,6 +542,7 @@
     const id = fId.value.trim();
     const existingFileKey = fFilePath.value.trim();
     const file = fFile.files && fFile.files[0];
+    const memo = fMemo.value.trim();
 
     // 새 항목 생성: 파일 필수
     if (!id && !file) {
@@ -558,6 +563,14 @@
       const idx = VIDEOS.findIndex(v => v.id === id);
       if (idx >= 0) {
         VIDEOS[idx] = { ...VIDEOS[idx], name, difficulty, fileKey };
+      }
+    }
+    if (!id) {
+      VIDEOS.unshift({ id: uid(), name, memo, difficulty, fileKey });  // ✅ memo 추가
+    } else {
+      const idx = VIDEOS.findIndex(v => v.id === id);
+      if (idx >= 0) {
+        VIDEOS[idx] = { ...VIDEOS[idx], name, memo, difficulty, fileKey }; // ✅ memo 추가
       }
     }
 
@@ -712,6 +725,31 @@
     currentPlayId = null;
     setScreen("list");
   }
+    function resetAdminForm() {
+      fId.value = "";
+      fFilePath.value = "";
+      fName.value = "";
+      fMemo.value = "";              // ✅ 추가
+      fDifficulty.value = "3";
+      fFile.value = "";
+      btnDelete.disabled = true;
+      fileHint.textContent = "새 항목은 영상 파일 선택 후 저장";
+    }
+    
+    function fillAdminForm(item) {
+      fId.value = item.id;
+      fFilePath.value = item.fileKey || "";
+      fName.value = item.name;
+      fMemo.value = item.memo || ""; // ✅ 추가
+      fDifficulty.value = String(item.difficulty);
+      fFile.value = "";
+      btnDelete.disabled = false;
+    
+      const linked = item.fileKey && fileMap.has(item.fileKey);
+      fileHint.textContent = linked
+        ? "현재 브라우저에서 파일 연결됨 (바꾸려면 새 파일 선택)"
+        : "파일 미연결: [영상 다시 연결]로 파일들을 다시 선택하세요";
+    }
 
   window.addEventListener("hashchange", route);
 
