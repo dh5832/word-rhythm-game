@@ -375,7 +375,7 @@
   let VIDEOS = [];
   let loaded = false;
 
-
+  const btnSaveAll = $("#btnSaveAll");
   const SCORE_KEY = "wr_score_overrides_v1";
   
   function loadScoreOverrides(){
@@ -618,6 +618,28 @@
     try { videoEl.pause(); } catch {}
     setScreen("list");
   }
+  btnSaveAll?.addEventListener("click", () => {
+  if (!screens.admin.classList.contains("active")) return;
+
+  const map = loadScoreOverrides();
+
+  adminTbody.querySelectorAll("tr[data-id]").forEach(tr => {
+    const id = tr.getAttribute("data-id");
+    const input = tr.querySelector(".score-input");
+    if (!id || !input) return;
+
+    const val = Math.max(0, Number(input.value || 0) || 0);
+    input.value = String(val);
+    map[id] = val;
+
+    // 현재 메모리에도 반영해두면 (목록에서 점수 표시할 때 등) 즉시 반영 가능
+    const idx = VIDEOS.findIndex(x => String(x.id) === String(id));
+    if (idx >= 0) VIDEOS[idx].score = val;
+  });
+
+  saveScoreOverrides(map);
+  toast("변경사항 저장됨");
+});
 
   window.addEventListener("hashchange", route);
 
