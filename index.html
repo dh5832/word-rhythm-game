@@ -353,7 +353,6 @@
   const $ = (s) => document.querySelector(s);
   const screens = { list: $("#screen-list"), player: $("#screen-player"), admin: $("#screen-admin") };
 
-  const fMemo = $("#fMemo");
   const grid = $("#grid");
   const listCount = $("#listCount");
   const adminCount = $("#adminCount");
@@ -373,21 +372,24 @@
   const btnResetForm = $("#btnResetForm");
   const btnDelete = $("#btnDelete");
   const btnAdminAdd = $("#btnAdminAdd");
+  const btnSave = $("#btnSave");
 
   const fId = $("#fId");
-  const fFilePath = $("#fFilePath"); // 여기선 fileKey 저장용으로 재활용
+  const fFilePath = $("#fFilePath"); // fileKey 저장용
   const fName = $("#fName");
+  const fMemo = $("#fMemo");
   const fDifficulty = $("#fDifficulty");
   const fFile = $("#fFile");
   const fileHint = $("#fileHint");
 
   const toastEl = $("#toast");
-
-  // (추가한 버튼)
   const btnRelink = $("#btnRelink");
 
   // 브라우저 메모리에만 유지되는 파일 맵: fileKey -> File
   const fileMap = new Map();
+
+  // 저장 중 중복 submit 방지
+  let saving = false;
 
   function toast(msg){
     toastEl.textContent = msg;
@@ -418,9 +420,8 @@
     return (crypto?.randomUUID?.() || ("id_" + Date.now() + "_" + Math.random().toString(16).slice(2)));
   }
 
-  // 로컬 파일 매칭 키(브라우저 재연결용)
   function makeFileKey(file){
-    // 같은 파일명이라도 용량이 다르면 구분 가능
+    // 브라우저 재연결용 키
     return `${file.name}::${file.size}`;
   }
 
@@ -447,23 +448,25 @@
   // -------------------------
   function renderList() {
     listCount.textContent = String(VIDEOS.length);
-    grid.innerHTML = VIDEOS.map(v => `
-      <div class="col-12 col-md-6 col-lg-4">
-        <div class="card game-card h-100" role="button" tabindex="0" data-id="${escapeHTML(v.id)}">
-          <div class="card-body">
-            <div class="d-flex justify-content-between gap-2">
-              <div class="me-auto">
-                <div class="fw-bold text-dark">${escapeHTML(v.name)}</div>
+
+    grid.innerHTML = VIDEOS.map(v => {
+      const memoText = (v.memo || "").trim();  // ✅ 메모 없으면 공백 처리
+      return `
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="card game-card h-100" role="button" tabindex="0" data-id="${escapeHTML(v.id)}">
+            <div class="card-body">
+              <div class="d-flex justify-content-between gap-2">
+                <div class="me-auto">
+                  <!-- ✅ 목록에는 메모만 표시 (메모 없으면 아무것도 안 보이게) -->
+                  <div class="fw-bold text-dark">${memoText ? escapeHTML(memoText) : "&nbsp;"}</div>
+                </div>
+                <div class="stars">${starsHTML(Number(v.difficulty) || 1)}</div>
               </div>
-              <div class="stars">${starsHTML(Number(v.difficulty) || 1)}</div>
-            </div>
-            <div class="muted small mt-2">
-              ${escapeHTML(v.memo || v.name || "-")}
             </div>
           </div>
         </div>
-      </div>
-    `).join("");
+      `;
+    }).join("");
 
     grid.querySelectorAll("[data-id]").forEach(card => {
       const id = card.getAttribute("data-id");
@@ -477,6 +480,7 @@
 
   function renderAdmin() {
     adminCount.textContent = String(VIDEOS.length);
+
     adminTbody.innerHTML = VIDEOS.map(v => {
       const linked = v.fileKey && fileMap.has(v.fileKey);
       return `
@@ -509,8 +513,9 @@
   // -------------------------
   function resetAdminForm() {
     fId.value = "";
-    fFilePath.value = ""; // fileKey
+    fFilePath.value = "";
     fName.value = "";
+    fMemo.value = "";
     fDifficulty.value = "3";
     fFile.value = "";
     btnDelete.disabled = true;
@@ -520,8 +525,9 @@
   function fillAdminForm(item) {
     fId.value = item.id;
     fFilePath.value = item.fileKey || "";
-    fName.value = item.name;
-    fDifficulty.value = String(item.difficulty);
+    fName.value = item.name || "";
+    fMemo.value = item.memo || "";
+    fDifficulty.value = String(item.difficulty || 3);
     fFile.value = "";
     btnDelete.disabled = false;
 
@@ -534,56 +540,74 @@
   // 저장(등록)
   adminForm.addEventListener("submit", (e) => {
     e.preventDefault();
+    if (saving) return;
+    saving = true;
+    btnSave.disabled = true;
 
-    const name = fName.value.trim();
-    const difficulty = Math.min(5, Math.max(1, Number(fDifficulty.value) || 1));
-    if (!name) return;
+    try {
+      const name = fName.value.trim();
+      const memo = fMemo.value.trim();
+      const difficulty = Math.min(5, Math.max(1, Number(fDifficulty.value) || 1));
 
-    const id = fId.value.trim();
-    const existingFileKey = fFilePath.value.trim();
-    const file = fFile.files && fFile.files[0];
-    const memo = fMemo.value.trim();
+      const id = fId.value.trim();
+      const existingFileKey = fFilePath.value.trim();
+      const file = fFile.files && fFile.files[0];
 
-    // 새 항목 생성: 파일 필수
-    if (!id && !file) {
-      toast("새 항목은 영상 파일을 선택해야 해요");
-      return;
-    }
+      if (!name) { toast("이름을 입력하세요"); return; }
 
-    // 파일 선택 시: 메모리 맵에 연결 + fileKey 생성
-    let fileKey = existingFileKey;
-    if (file) {
-      fileKey = makeFileKey(file);
-      fileMap.set(fileKey, file);
-    }
-
-    if (!id) {
-      VIDEOS.unshift({ id: uid(), name, difficulty, fileKey });
-    } else {
-      const idx = VIDEOS.findIndex(v => v.id === id);
-      if (idx >= 0) {
-        VIDEOS[idx] = { ...VIDEOS[idx], name, difficulty, fileKey };
+      // 새 항목 생성: 파일 필수 (정책 그대로)
+      if (!id && !file) {
+        toast("새 항목은 영상 파일을 선택해야 해요");
+        return;
       }
-    }
-    if (!id) {
-      VIDEOS.unshift({ id: uid(), name, memo, difficulty, fileKey });  // ✅ memo 추가
-    } else {
-      const idx = VIDEOS.findIndex(v => v.id === id);
-      if (idx >= 0) {
-        VIDEOS[idx] = { ...VIDEOS[idx], name, memo, difficulty, fileKey }; // ✅ memo 추가
-      }
-    }
 
-    saveVideos();
-    toast("저장됨");
-    resetAdminForm();
-    route(); // 화면 갱신
+      // fileKey 결정
+      let fileKey = existingFileKey;
+      if (file) {
+        fileKey = makeFileKey(file);
+        fileMap.set(fileKey, file);
+      }
+
+      // ✅ 동일 파일(fileKey) 중복 등록 방지: 새로 추가 시 이미 있으면 업데이트로 처리
+      if (!id && fileKey) {
+        const dup = VIDEOS.find(v => v.fileKey === fileKey);
+        if (dup) {
+          dup.name = name;
+          dup.memo = memo;
+          dup.difficulty = difficulty;
+          saveVideos();
+          toast("이미 등록된 파일이라 항목을 업데이트했어요");
+          resetAdminForm();
+          route();
+          return;
+        }
+      }
+
+      if (!id) {
+        // ✅ 딱 1번만 추가 (중복 추가 제거 완료)
+        VIDEOS.unshift({ id: uid(), name, memo, difficulty, fileKey });
+      } else {
+        const idx = VIDEOS.findIndex(v => v.id === id);
+        if (idx >= 0) {
+          VIDEOS[idx] = { ...VIDEOS[idx], name, memo, difficulty, fileKey };
+        }
+      }
+
+      saveVideos();
+      toast("저장됨");
+      resetAdminForm();
+      route();
+    } finally {
+      saving = false;
+      btnSave.disabled = false;
+    }
   });
 
   // 삭제
   btnDelete.addEventListener("click", () => {
     const id = fId.value.trim();
     if (!id) return;
+
     const item = VIDEOS.find(v => v.id === id);
     if (!item) return;
 
@@ -596,7 +620,7 @@
     route();
   });
 
-  // 추가/새로
+  // 초기화/추가
   btnResetForm?.addEventListener("click", resetAdminForm);
   btnAdminAdd?.addEventListener("click", () => { resetAdminForm(); fName.focus(); });
 
@@ -604,7 +628,6 @@
   // Relink: 파일을 한 번에 다시 선택해서 매칭
   // -------------------------
   function relinkFilesViaPicker(){
-    // 숨겨진 input 만들어서 다중 선택 유도
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "video/*";
@@ -612,15 +635,16 @@
 
     input.addEventListener("change", () => {
       const files = Array.from(input.files || []);
-      let linked = 0;
       for (const f of files) {
         const k = makeFileKey(f);
         fileMap.set(k, f);
       }
-      // 현재 목록 중 연결 상태 카운트
+
+      let linked = 0;
       for (const v of VIDEOS) {
         if (v.fileKey && fileMap.has(v.fileKey)) linked++;
       }
+
       toast(`파일 ${files.length}개 선택 / 연결된 항목 ${linked}개`);
       renderAdmin();
       renderList();
@@ -644,20 +668,18 @@
     }
   }
 
-  async function showPlayer(id) {
+  function showPlayer(id) {
     const v = VIDEOS.find(x => x.id === id);
     if (!v) { window.location.hash = "#list"; return; }
 
     currentPlayId = id;
-    playerName.textContent = v.name;
+    playerName.textContent = v.name || "-";
     playerStars.innerHTML = starsHTML(Number(v.difficulty) || 1);
 
-    // 로컬 파일 연결 확인
     const f = v.fileKey ? fileMap.get(v.fileKey) : null;
     if (!f) {
       toast("이 브라우저에서 파일이 아직 연결되지 않았어요");
       window.location.hash = "#admin";
-      // 관리자에서 바로 재연결 누르게 유도
       setTimeout(()=>toast("관리자에서 [영상 다시 연결]을 눌러 파일들을 선택하세요"), 250);
       return;
     }
@@ -677,7 +699,6 @@
   btnGoList.addEventListener("click", () => { window.location.hash = "#list"; });
   btnGoAdmin.addEventListener("click", () => { window.location.hash = "#admin"; });
 
-  // 우클릭 차단(원하면 유지)
   window.addEventListener("contextmenu", (e) => e.preventDefault(), { capture: true });
 
   window.addEventListener("keydown", (e) => {
@@ -710,46 +731,24 @@
 
     if (hash === "#admin") {
       setScreen("admin");
-      // 로그인 UI는 이제 필요 없음: 폼 항상 보여주기
+
+      // 로그인 UI 사용 안 함: 폼 보여주기
       $("#authBox")?.classList.add("d-none");
+      $("#adminLocked")?.classList.add("d-none");
       adminForm.classList.remove("d-none");
+
       btnResetForm?.classList.remove("d-none");
       btnAdminAdd?.classList.remove("d-none");
+
       renderAdmin();
       return;
     }
 
-    // default list
     try { videoEl.pause(); } catch {}
     cleanupObjectUrl();
     currentPlayId = null;
     setScreen("list");
   }
-    function resetAdminForm() {
-      fId.value = "";
-      fFilePath.value = "";
-      fName.value = "";
-      fMemo.value = "";              // ✅ 추가
-      fDifficulty.value = "3";
-      fFile.value = "";
-      btnDelete.disabled = true;
-      fileHint.textContent = "새 항목은 영상 파일 선택 후 저장";
-    }
-    
-    function fillAdminForm(item) {
-      fId.value = item.id;
-      fFilePath.value = item.fileKey || "";
-      fName.value = item.name;
-      fMemo.value = item.memo || ""; // ✅ 추가
-      fDifficulty.value = String(item.difficulty);
-      fFile.value = "";
-      btnDelete.disabled = false;
-    
-      const linked = item.fileKey && fileMap.has(item.fileKey);
-      fileHint.textContent = linked
-        ? "현재 브라우저에서 파일 연결됨 (바꾸려면 새 파일 선택)"
-        : "파일 미연결: [영상 다시 연결]로 파일들을 다시 선택하세요";
-    }
 
   window.addEventListener("hashchange", route);
 
@@ -757,6 +756,7 @@
   resetAdminForm();
   route();
 </script>
+
 
 
 </body>
